@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NLP Car Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #080c10;
+      --surface:   #0e1318;
+      --border:    #1c2a35;
+      --accent:    #00e5ff;
+      --accent2:   #ff4757;
+      --success:   #00e676;
+      --warn:      #ffab00;
+      --text:      #cdd6e0;
+      --text-dim:  #4a6070;
+      --mono:      'IBM Plex Mono', monospace;
+      --sans:      'Tajawal', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ── grid background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── scan line ── */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -100%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: .25;
+      animation: scan 8s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes scan { to { top: 200%; } }
+
+    /* ── corner decoration ── */
+    .corner {
+      position: fixed;
+      width: 120px;
+      height: 120px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: .25;
+    }
+    .corner--tl { top: 0; left: 0;  border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+    .corner--tr { top: 0; right: 0; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+    .corner--bl { bottom: 0; left: 0;  border-bottom: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+    .corner--br { bottom: 0; right: 0; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+
+    /* ── layout ── */
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 780px;
+    }
+
+    /* ── header ── */
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: 2.5rem;
+      animation: fadeDown .7s ease both;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-hex {
+      width: 52px;
+      height: 52px;
+      background: var(--accent);
+      clip-path: polygon(50% 0%,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse-hex 3s ease-in-out infinite;
+    }
+
+    .logo-hex svg { width: 26px; height: 26px; color: var(--bg); }
+
+    @keyframes pulse-hex {
+      0%,100% { box-shadow: 0 0 0 0 rgba(0,229,255,.4); }
+      50%      { box-shadow: 0 0 0 12px rgba(0,229,255,0); }
+    }
+
+    h1 {
+      font-family: var(--mono);
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -.02em;
+      color: #fff;
+    }
+
+    h1 span { color: var(--accent); }
+
+    .tagline {
+      font-size: .9rem;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    /* ── status bar ── */
+    .status-bar {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2rem;
+      animation: fadeDown .7s .1s ease both;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .4rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-family: var(--mono);
+      font-size: .75rem;
+      background: var(--surface);
+      letter-spacing: .05em;
+    }
+
+    .status-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot--ok   { background: var(--success); box-shadow: 0 0 6px var(--success); animation: blink 2s ease-in-out infinite; }
+    .dot--err  { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+    .dot--warn { background: var(--warn);    box-shadow: 0 0 6px var(--warn); }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── main card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      animation: fadeUp .6s .2s ease both;
+    }
+
+    /* top-left bracket */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px;
+      width: 24px; height: 24px;
+      border-top: 2px solid var(--accent);
+      border-left: 2px solid var(--accent);
+      border-radius: 2px 0 0 0;
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; right: -1px;
+      width: 24px; height: 24px;
+      border-bottom: 2px solid var(--accent);
+      border-right: 2px solid var(--accent);
+      border-radius: 0 0 2px 0;
+    }
+
+    .card-label {
+      font-family: var(--mono);
+      font-size: .7rem;
+      color: var(--accent);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+    }
+
+    /* ── input group ── */
+    .input-row {
+      display: flex;
+      gap: .75rem;
+    }
+
+    .cmd-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: .9rem 1.1rem;
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 1.05rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      caret-color: var(--accent);
+    }
+
+    .cmd-input::placeholder { color: var(--text-dim); }
+
+    .cmd-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,255,.08), inset 0 0 20px rgba(0,229,255,.02);
+    }
+
+    .send-btn {
+      padding: .9rem 1.6rem;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 2px;
+      font-family: var(--mono);
+      font-size: .85rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      transition: background .2s, transform .1s, box-shadow .2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .send-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,.15);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .send-btn:hover { background: #33eaff; box-shadow: 0 0 20px rgba(0,229,255,.35); }
+    .send-btn:hover::before { opacity: 1; }
+    .send-btn:active { transform: scale(.97); }
+    .send-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; box-shadow: none; }
+
+    .send-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── result card ── */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      animation: fadeUp .4s ease both;
+      position: relative;
+    }
+
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px;
+      width: 24px; height: 24px;
+      border-top: 2px solid var(--success);
+      border-left: 2px solid var(--success);
+      border-radius: 2px 0 0 0;
+    }
+
+    .result-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .result-cell {
+      background: var(--surface);
+      padding: 1rem 1.2rem;
+    }
+
+    .cell-label {
+      font-family: var(--mono);
+      font-size: .65rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: .35rem;
+    }
+
+    .cell-value {
+      font-size: 1rem;
+      color: #fff;
+      word-break: break-all;
+    }
+
+    /* ── command banner ── */
+    .cmd-banner {
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+    }
+
+    .cmd-badge {
+      font-family: var(--mono);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: .15em;
+      color: var(--bg);
+      padding: .4rem 1.2rem;
+      border-radius: 2px;
+      background: var(--success);
+    }
+
+    .cmd-badge--stop { background: var(--accent2); }
+
+    .cmd-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: .4rem;
+    }
+
+    /* ── confidence ── */
+    .conf-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      direction: ltr;
+    }
+
+    .conf-track {
+      width: 130px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .conf-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .8s cubic-bezier(.4,0,.2,1);
+    }
+
+    .conf-fill--high   { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .conf-fill--mid    { background: var(--warn);    box-shadow: 0 0 6px var(--warn); }
+    .conf-fill--low    { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+
+    .conf-pct {
+      font-family: var(--mono);
+      font-size: .8rem;
+      color: var(--text);
+      min-width: 44px;
+      text-align: right;
+    }
+
+    .mqtt-status {
+      font-family: var(--mono);
+      font-size: .7rem;
+      letter-spacing: .08em;
+    }
+
+    .mqtt-status.ok   { color: var(--success); }
+    .mqtt-status.fail { color: var(--accent2); }
+
+    /* ── loading ── */
+    .loading-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      animation: fadeUp .3s ease both;
+    }
+
+    .loader-bars {
+      display: flex;
+      gap: 4px;
+      align-items: flex-end;
+      height: 24px;
+    }
+
+    .loader-bars span {
+      width: 4px;
+      border-radius: 2px;
+      background: var(--accent);
+      animation: bar .9s ease-in-out infinite;
+    }
+
+    .loader-bars span:nth-child(1) { height: 8px;  animation-delay: 0s; }
+    .loader-bars span:nth-child(2) { height: 16px; animation-delay: .15s; }
+    .loader-bars span:nth-child(3) { height: 24px; animation-delay: .3s; }
+    .loader-bars span:nth-child(4) { height: 16px; animation-delay: .45s; }
+    .loader-bars span:nth-child(5) { height: 8px;  animation-delay: .6s; }
+
+    @keyframes bar {
+      0%,100% { opacity: .3; transform: scaleY(.6); }
+      50%      { opacity: 1;  transform: scaleY(1); }
+    }
+
+    .loading-text {
+      font-family: var(--mono);
+      font-size: .85rem;
+      color: var(--text-dim);
+    }
+
+    /* ── error ── */
+    .error-card {
+      background: rgba(255,71,87,.06);
+      border: 1px solid rgba(255,71,87,.3);
+      border-radius: 4px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      animation: fadeUp .3s ease both;
+    }
+
+    .error-icon { font-size: 1.4rem; }
+
+    .error-msg {
+      flex: 1;
+      font-size: .95rem;
+      color: #ff8a93;
+    }
+
+    .retry-btn {
+      padding: .5rem 1rem;
+      background: transparent;
+      border: 1px solid rgba(255,71,87,.4);
+      border-radius: 2px;
+      color: var(--accent2);
+      font-family: var(--mono);
+      font-size: .75rem;
+      cursor: pointer;
+      letter-spacing: .08em;
+      transition: background .2s;
+    }
+
+    .retry-btn:hover { background: rgba(255,71,87,.1); }
+
+    /* ── quick commands ── */
+    .quick-label {
+      font-family: var(--mono);
+      font-size: .65rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: .75rem;
+    }
+
+    .quick-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
+    .quick-btn {
+      padding: .45rem .9rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: .75rem;
+      cursor: pointer;
+      letter-spacing: .06em;
+      transition: border-color .2s, color .2s, box-shadow .2s;
+    }
+
+    .quick-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 10px rgba(0,229,255,.1);
+    }
+
+    /* ── animations ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── responsive ── */
+    @media (max-width: 560px) {
+      h1 { font-size: 1.4rem; }
+      .input-row { flex-direction: column; }
+      .send-btn { width: 100%; justify-content: center; }
+      .result-top { grid-template-columns: 1fr; }
+      .cmd-banner { flex-direction: column; align-items: flex-start; gap: .8rem; }
+      .cmd-meta { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="corner corner--tl"></div>
+  <div class="corner corner--tr"></div>
+  <div class="corner corner--bl"></div>
+  <div class="corner corner--br"></div>
+
+  <div class="wrap">
+
+    <!-- Header -->
+    <header>
+      <div class="logo-row">
+        <div class="logo-hex">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h1>NLP<span>_</span>CAR</h1>
+      </div>
+      <p class="tagline">Natural Language Vehicle Control System</p>
+    </header>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="status-pill">
+        <span class="dot {% if model_loaded %}dot--ok{% else %}dot--err{% endif %}"></span>
+        MODEL: {% if model_loaded %}ONLINE{% else %}OFFLINE{% endif %}
+      </div>
+      <div class="status-pill" id="mqttPill">
+        <span class="dot {% if mqtt_connected %}dot--ok{% else %}dot--warn{% endif %}"></span>
+        MQTT: {% if mqtt_connected %}CONNECTED{% else %}PENDING{% endif %}
+      </div>
+      <div class="status-pill">
+        <span class="dot dot--ok" style="background:#4a6070; box-shadow:none;"></span>
+        THRESHOLD: {{ "%.0f"|format(60) }}%
+      </div>
+    </div>
+
+    <!-- Command card -->
+    <div class="card">
+      <div class="card-label">// send command</div>
+
+      <form id="commandForm">
+        <div class="input-row">
+          <input
+            id="commandInput"
+            class="cmd-input"
+            type="text"
+            placeholder="اكتب الأمر بالعربية أو الإنجليزية..."
+            autocomplete="off"
+            autofocus
+          />
+          <button type="submit" class="send-btn" id="submitBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            SEND
+          </button>
+        </div>
+      </form>
+
+      <!-- Quick commands -->
+      <div style="margin-top:1.2rem;">
+        <div class="quick-label">// quick commands</div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="fillCmd('روح قدام')">↑ قدام</button>
+          <button class="quick-btn" onclick="fillCmd('ارجع ورا')">↓ ورا</button>
+          <button class="quick-btn" onclick="fillCmd('يمين')">→ يمين</button>
+          <button class="quick-btn" onclick="fillCmd('شمال')">← شمال</button>
+          <button class="quick-btn" onclick="fillCmd('وقف')">■ وقف</button>
+          <button class="quick-btn" onclick="fillCmd('forward')">↑ FORWARD</button>
+          <button class="quick-btn" onclick="fillCmd('backward')">↓ BACKWARD</button>
+          <button class="quick-btn" onclick="fillCmd('stop')">■ STOP</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingContainer" class="loading-card hidden">
+      <div class="loader-bars">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <span class="loading-text">processing command...</span>
+    </div>
+
+    <!-- Error -->
+    <div id="errorContainer" class="error-card hidden">
+      <span class="error-icon">⚠</span>
+      <span class="error-msg" id="errorMessage"></span>
+      <button class="retry-btn" id="retryBtn">RETRY</button>
+    </div>
+
+    <!-- Result -->
+    <div id="resultContainer" class="result-card hidden">
+      <div class="result-top">
+        <div class="result-cell">
+          <div class="cell-label">// input</div>
+          <div class="cell-value" id="inputText">—</div>
+        </div>
+        <div class="result-cell">
+          <div class="cell-label">// cleaned</div>
+          <div class="cell-value" id="cleanText">—</div>
+        </div>
+        <div class="result-cell">
+          <div class="cell-label">// intent</div>
+          <div class="cell-value" id="intentText">—</div>
+        </div>
+        <div class="result-cell">
+          <div class="cell-label">// confidence</div>
+          <div class="cell-value">
+            <div class="conf-row">
+              <div class="conf-track">
+                <div class="conf-fill" id="confidenceBar" style="width:0%"></div>
+              </div>
+              <span class="conf-pct" id="confidenceText">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-banner">
+        <span class="cmd-badge" id="commandBadge">—</span>
+        <div class="cmd-meta">
+          <span class="mqtt-status" id="mqttStatusText">—</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /wrap -->
+
+  <script>
+    const form      = document.getElementById('commandForm');
+    const input     = document.getElementById('commandInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadEl    = document.getElementById('loadingContainer');
+    const errEl     = document.getElementById('errorContainer');
+    const errMsg    = document.getElementById('errorMessage');
+    const resultEl  = document.getElementById('resultContainer');
+    const retryBtn  = document.getElementById('retryBtn');
+
+    function fillCmd(txt) {
+      input.value = txt;
+      input.focus();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const cmd = input.value.trim();
+      if (!cmd) { showErr('من فضلك أدخل أمر'); return; }
+      showLoading();
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: cmd })
+        });
+        if (!res.ok) throw new Error('فشل الاتصال بالخادم');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        showResult(data);
+      } catch (err) {
+        showErr(err.message || 'حدث خطأ');
+      }
+    });
+
+    retryBtn.addEventListener('click', () => {
+      hide(errEl); hide(resultEl);
+      input.value = '';
+      input.focus();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { hide(errEl); hide(resultEl); }
+    });
+
+    function showLoading() {
+      hide(errEl); hide(resultEl);
+      show(loadEl);
+      submitBtn.disabled = true;
+    }
+
+    function hideLoading() {
+      hide(loadEl);
+      submitBtn.disabled = false;
+    }
+
+    function showErr(msg) {
+      hideLoading();
+      hide(resultEl);
+      errMsg.textContent = msg;
+      show(errEl);
+    }
+
+    function showResult(d) {
+      hideLoading();
+      hide(errEl);
+
+      document.getElementById('inputText').textContent  = d.input      || '—';
+      document.getElementById('cleanText').textContent  = d.clean_text || '—';
+      document.getElementById('intentText').textContent = d.intent     || '—';
+
+      const conf = d.confidence || 0;
+      const bar  = document.getElementById('confidenceBar');
+      const pct  = document.getElementById('confidenceText');
+      bar.style.width = conf + '%';
+      pct.textContent = conf + '%';
+      bar.className   = 'conf-fill ' +
+        (conf >= 80 ? 'conf-fill--high' : conf >= 60 ? 'conf-fill--mid' : 'conf-fill--low');
+
+      const badge = document.getElementById('commandBadge');
+      badge.textContent  = d.command || '—';
+      badge.className    = 'cmd-badge' + (d.command === 'STOP' ? ' cmd-badge--stop' : '');
+
+      const mqttEl = document.getElementById('mqttStatusText');
+      mqttEl.textContent = d.mqtt_sent ? '✓ MQTT DELIVERED' : '✗ MQTT FAILED';
+      mqttEl.className   = 'mqtt-status ' + (d.mqtt_sent ? 'ok' : 'fail');
+
+      show(resultEl);
+    }
+
+    function show(el) { el.classList.remove('hidden'); }
+    function hide(el) { el.classList.add('hidden'); }
+  </script>
+</body>
+</html>
