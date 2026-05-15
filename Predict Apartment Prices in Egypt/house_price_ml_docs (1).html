@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>House Price Prediction — ML Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #020510;
+  --surface: #060d1f;
+  --card: #0a1628;
+  --border: #0f2a4a;
+  --accent1: #00d4ff;
+  --accent2: #7c3aed;
+  --accent3: #10b981;
+  --accent4: #f59e0b;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --glow1: rgba(0,212,255,0.15);
+  --glow2: rgba(124,58,237,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ─── BACKGROUND CANVAS ─── */
+#bg-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ─── GRID OVERLAY ─── */
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ─── FLOATING CODE SNIPPETS ─── */
+.floating-code {
+  position: fixed;
+  z-index: 1;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: rgba(0,212,255,0.12);
+  white-space: pre;
+  pointer-events: none;
+  animation: floatUp 20s linear infinite;
+  line-height: 1.4;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(100vh); opacity: 0; }
+  5% { opacity: 1; }
+  95% { opacity: 1; }
+  100% { transform: translateY(-100vh); opacity: 0; }
+}
+
+/* ─── WRAPPER ─── */
+.wrapper {
+  position: relative;
+  z-index: 10;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ─── COVER PAGE ─── */
+.cover {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  padding: 60px 24px;
+}
+
+.cover-badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--accent1);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  border: 1px solid var(--accent1);
+  padding: 6px 20px;
+  margin-bottom: 32px;
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%,100% { box-shadow: 0 0 8px var(--accent1), inset 0 0 8px rgba(0,212,255,0.05); }
+  50% { box-shadow: 0 0 20px var(--accent1), inset 0 0 20px rgba(0,212,255,0.1); }
+}
+
+.cover h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(36px, 7vw, 80px);
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #fff 0%, var(--accent1) 50%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(0 0 30px rgba(0,212,255,0.4));
+}
+
+.cover-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  color: var(--accent3);
+  letter-spacing: 2px;
+  margin-bottom: 48px;
+}
+
+/* ─── ROBOT SVG ─── */
+.robot-container {
+  position: relative;
+  margin: 0 auto 48px;
+  width: 220px;
+  height: 220px;
+}
+
+.robot-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 20px var(--accent1));
+  animation: robot-hover 3s ease-in-out infinite;
+}
+
+@keyframes robot-hover {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(1deg); }
+  75% { transform: translateY(-5px) rotate(-1deg); }
+}
+
+.robot-glow {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 20px;
+  background: radial-gradient(ellipse, rgba(0,212,255,0.4), transparent);
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%,100% { opacity: 0.5; transform: translateX(-50%) scaleX(1); }
+  50% { opacity: 1; transform: translateX(-50%) scaleX(1.3); }
+}
+
+/* ─── TECH TAGS ─── */
+.tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 48px;
+}
+
+.tech-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 2px;
+  animation: tag-appear 0.5s ease backwards;
+}
+
+.tech-tag:nth-child(1) { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.4); color: var(--accent1); animation-delay: 0.1s; }
+.tech-tag:nth-child(2) { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.4); color: #a78bfa; animation-delay: 0.2s; }
+.tech-tag:nth-child(3) { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.4); color: var(--accent3); animation-delay: 0.3s; }
+.tech-tag:nth-child(4) { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.4); color: var(--accent4); animation-delay: 0.4s; }
+.tech-tag:nth-child(5) { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.4); color: var(--accent1); animation-delay: 0.5s; }
+.tech-tag:nth-child(6) { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.4); color: #a78bfa; animation-delay: 0.6s; }
+
+@keyframes tag-appear {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── AUTHORS ─── */
+.authors-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.author-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  min-width: 200px;
+}
+
+.author-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent1), var(--accent2));
+}
+
+.author-number {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(0,212,255,0.3);
+  position: absolute;
+  right: 12px; top: 8px;
+}
+
+.author-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.author-id {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--accent3);
+}
+
+/* ─── SECTION DIVIDER ─── */
+.section {
+  padding: 80px 0;
+  border-top: 1px solid var(--border);
+  position: relative;
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 0;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent1), transparent);
+}
+
+.section-num {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--accent1);
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.section-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(22px, 4vw, 38px);
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.section-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+}
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.card:hover {
+  border-color: var(--accent1);
+  transform: translateY(-2px);
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0,212,255,0.03), transparent 40%);
+  pointer-events: none;
+}
+
+.card-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent1), var(--accent2));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+
+.card:hover .card-accent { transform: scaleX(1); }
+
+/* ─── TOC ─── */
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.toc-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.toc-item:hover {
+  border-color: var(--accent1);
+  background: rgba(0,212,255,0.05);
+  transform: translateX(4px);
+}
+
+.toc-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--accent1);
+  min-width: 32px;
+}
+
+.toc-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.toc-desc {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ─── INFO CARDS ─── */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.info-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 20px;
+  text-align: center;
+}
+
+.info-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.info-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.info-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent1);
+}
+
+/* ─── FEATURE CATEGORIES ─── */
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.feat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 20px;
+}
+
+.feat-card-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--accent1);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.feat-item {
+  font-size: 13px;
+  padding: 5px 0;
+  color: var(--text);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feat-item::before {
+  content: '▸';
+  color: var(--accent3);
+  font-size: 10px;
+}
+
+/* ─── TARGET BAR ─── */
+.target-box {
+  background: linear-gradient(135deg, rgba(0,212,255,0.05), rgba(124,58,237,0.05));
+  border: 1px solid var(--border);
+  padding: 20px 28px;
+  margin-top: 24px;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.target-stat {
+  text-align: center;
+}
+
+.target-stat-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.target-stat-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent4);
+}
+
+.split-bars {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.split-bar {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 2px;
+}
+
+.split-train {
+  flex: 4;
+  background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,212,255,0.1));
+  border: 1px solid rgba(0,212,255,0.3);
+  color: var(--accent1);
+}
+
+.split-test {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(124,58,237,0.1));
+  border: 1px solid rgba(124,58,237,0.3);
+  color: #a78bfa;
+}
+
+/* ─── EQUATION ─── */
+.equation-box {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent1);
+  padding: 24px 28px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  color: var(--accent3);
+  margin: 24px 0;
+  overflow-x: auto;
+  position: relative;
+}
+
+.equation-box::before {
+  content: 'OBJECTIVE FUNCTION';
+  position: absolute;
+  top: -10px; left: 16px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--accent1);
+  background: var(--bg);
+  padding: 0 8px;
+}
+
+/* ─── PARAM CARDS ─── */
+.param-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.param-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 20px;
+  position: relative;
+}
+
+.param-name {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  color: var(--accent4);
+  margin-bottom: 8px;
+}
+
+.param-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.param-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  padding: 3px 8px;
+  border: 1px solid var(--accent3);
+  color: var(--accent3);
+  letter-spacing: 1px;
+}
+
+/* ─── L1 L2 GRID ─── */
+.reg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.reg-card {
+  padding: 24px;
+  border: 1px solid var(--border);
+}
+
+.reg-card.l1 {
+  background: linear-gradient(135deg, rgba(0,212,255,0.05), transparent);
+  border-color: rgba(0,212,255,0.3);
+}
+
+.reg-card.l2 {
+  background: linear-gradient(135deg, rgba(124,58,237,0.05), transparent);
+  border-color: rgba(124,58,237,0.3);
+}
+
+.reg-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.reg-card.l1 .reg-title { color: var(--accent1); }
+.reg-card.l2 .reg-title { color: #a78bfa; }
+
+.reg-item {
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.reg-card.l1 .reg-item::before { content: '◆'; color: var(--accent1); font-size: 8px; margin-top: 4px; }
+.reg-card.l2 .reg-item::before { content: '◆'; color: #a78bfa; font-size: 8px; margin-top: 4px; }
+
+/* ─── GRID SEARCH VIZ ─── */
+.grid-search {
+  display: grid;
+  grid-template-columns: auto repeat(6, 1fr);
+  gap: 4px;
+  margin: 24px 0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+}
+
+.gs-header {
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.2);
+  padding: 8px 4px;
+  text-align: center;
+  color: var(--accent1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gs-label {
+  background: rgba(124,58,237,0.1);
+  border: 1px solid rgba(124,58,237,0.2);
+  padding: 8px 12px;
+  color: #a78bfa;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.gs-cell {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  padding: 8px 4px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.gs-cell:hover { background: rgba(0,212,255,0.1); color: var(--accent1); }
+
+.gs-cell.best {
+  background: rgba(245,158,11,0.2);
+  border-color: var(--accent4);
+  color: var(--accent4);
+  font-weight: bold;
+  animation: best-pulse 2s ease-in-out infinite;
+}
+
+@keyframes best-pulse {
+  0%,100% { box-shadow: 0 0 8px rgba(245,158,11,0.3); }
+  50% { box-shadow: 0 0 20px rgba(245,158,11,0.6); }
+}
+
+/* ─── CV FOLDS ─── */
+.cv-folds {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.cv-fold {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+}
+
+.cv-fold-label {
+  color: var(--muted);
+  width: 50px;
+  text-align: right;
+}
+
+.cv-segment {
+  height: 30px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+.cv-train {
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.2);
+  color: rgba(0,212,255,0.5);
+}
+
+.cv-val {
+  background: rgba(245,158,11,0.2);
+  border: 1px solid rgba(245,158,11,0.4);
+  color: var(--accent4);
+  font-weight: bold;
+}
+
+/* ─── MLFLOW PIPELINE ─── */
+.pipeline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 24px 0;
+}
+
+.pipe-step {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px 20px;
+  text-align: center;
+  flex: 1;
+  min-width: 100px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.pipe-step:hover {
+  border-color: var(--accent1);
+  background: rgba(0,212,255,0.05);
+}
+
+.pipe-step-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(0,212,255,0.3);
+}
+
+.pipe-step-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.pipe-arrow {
+  color: var(--accent1);
+  font-size: 18px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ─── MLFlow cards ─── */
+.mlflow-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.mlflow-group {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 20px;
+}
+
+.mlflow-group-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mlflow-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.mlflow-key {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.mlflow-val {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ─── METRICS ─── */
+.metrics-trio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.metric-big {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 28px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-big::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top, rgba(0,212,255,0.05), transparent 60%);
+}
+
+.metric-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.metric-big:nth-child(1) .metric-name { color: var(--accent1); }
+.metric-big:nth-child(2) .metric-name { color: #a78bfa; }
+.metric-big:nth-child(3) .metric-name { color: var(--accent3); }
+
+.metric-full {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.metric-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.formula-box {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  padding: 14px 20px;
+  margin-top: 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--accent3);
+}
+
+/* ─── RESULTS TABLE ─── */
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  margin-top: 24px;
+}
+
+.results-table th {
+  background: rgba(0,212,255,0.08);
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  text-align: left;
+  color: var(--accent1);
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.results-table td {
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  color: var(--text);
+  transition: background 0.2s;
+}
+
+.results-table tr:hover td { background: rgba(0,212,255,0.03); }
+
+.results-table .best-row td {
+  background: rgba(245,158,11,0.08);
+  border-color: rgba(245,158,11,0.2);
+}
+
+.best-star {
+  color: var(--accent4);
+}
+
+/* ─── R2 CHART ─── */
+.r2-chart {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.r2-chart-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+}
+
+.r2-bar-group {
+  margin-bottom: 16px;
+}
+
+.r2-bar-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.r2-bar-track {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  height: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.r2-bar-fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  justify-content: flex-end;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  transition: width 1.5s ease;
+  animation: bar-grow 1.5s ease both;
+}
+
+.r2-train { background: linear-gradient(90deg, rgba(0,212,255,0.3), rgba(0,212,255,0.7)); color: var(--accent1); }
+.r2-test { background: linear-gradient(90deg, rgba(124,58,237,0.3), rgba(124,58,237,0.7)); color: #a78bfa; }
+
+@keyframes bar-grow {
+  from { width: 0 !important; }
+}
+
+/* ─── CODE BLOCK ─── */
+.code-section {
+  margin-top: 24px;
+}
+
+.code-step {
+  margin-bottom: 24px;
+}
+
+.code-step-header {
+  background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.2);
+  border-bottom: none;
+  padding: 10px 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--accent1);
+  letter-spacing: 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.code-step-header span:last-child {
+  color: var(--muted);
+}
+
+.code-block {
+  background: #010813;
+  border: 1px solid rgba(0,212,255,0.2);
+  padding: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.c-kw { color: #c792ea; }
+.c-fn { color: #82aaff; }
+.c-str { color: #c3e88d; }
+.c-cm { color: #546e7a; font-style: italic; }
+.c-num { color: #f78c6c; }
+.c-var { color: #eeffff; }
+.c-pkg { color: #ffcb6b; }
+.c-op { color: var(--accent1); }
+
+/* ─── INSIGHTS ─── */
+.insights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.insight {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transition: all 0.3s;
+}
+
+.insight:hover {
+  border-color: var(--accent1);
+  transform: translateX(4px);
+}
+
+.insight-icon {
+  font-size: 20px;
+  min-width: 28px;
+}
+
+.insight-text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ─── CONCLUSION ─── */
+.findings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.finding {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent1);
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.finding-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px;
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--accent1);
+  min-width: 36px;
+}
+
+.finding-text {
+  font-size: 14px;
+  padding-top: 4px;
+}
+
+.future-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.future-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 20px;
+  transition: all 0.3s;
+}
+
+.future-card:hover {
+  border-color: var(--accent2);
+  transform: translateY(-4px);
+}
+
+.future-card-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.future-card-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #a78bfa;
+  margin-bottom: 8px;
+}
+
+.future-card-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ─── FOOTER ─── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 60px 0;
+  text-align: center;
+}
+
+.footer-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent1);
+  margin-bottom: 8px;
+}
+
+.footer-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 3px;
+}
+
+/* ─── MINI ROBOTS DECORATION ─── */
+.mini-robot {
+  display: inline-block;
+  animation: mini-bob 2s ease-in-out infinite;
+}
+
+@keyframes mini-bob {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 3px; }
+
+/* ─── ANIMATIONS ─── */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fade-in-up 0.7s ease forwards;
+}
+
+@keyframes fade-in-up {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .metrics-trio { grid-template-columns: 1fr; }
+  .reg-grid { grid-template-columns: 1fr; }
+  .cover h1 { font-size: 32px; }
+}
+
+/* ─── SCAN LINE ─── */
+.scanline {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent1), transparent);
+  z-index: 9999;
+  animation: scan 4s linear infinite;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+@keyframes scan {
+  0% { top: 0; }
+  100% { top: 100vh; }
+}
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+<canvas id="bg-canvas"></canvas>
+<div class="grid-overlay"></div>
+
+<!-- FLOATING CODE -->
+<div class="floating-code" style="left:3%;animation-delay:0s;animation-duration:25s">import mlflow
+import pandas as pd
+from sklearn.linear_model import ElasticNet
+from sklearn.model_selection import GridSearchCV</div>
+<div class="floating-code" style="left:20%;animation-delay:5s;animation-duration:22s">alpha = [0.001, 0.01, 0.1, 1, 10]
+l1_ratio = [0.1, 0.3, 0.5, 0.7, 0.9]
+param_grid = {"alpha": alpha,
+              "l1_ratio": l1_ratio}</div>
+<div class="floating-code" style="left:55%;animation-delay:2s;animation-duration:28s">with mlflow.start_run():
+  mlflow.log_param("best_alpha", 0.1)
+  mlflow.log_param("cv", 5)
+  mlflow.log_metric("test_r2", 0.891)</div>
+<div class="floating-code" style="left:75%;animation-delay:8s;animation-duration:20s">MAE = mean_absolute_error(y, y_hat)
+RMSE = sqrt(mean_squared_error(y, y_hat))
+R2 = r2_score(y_test, y_pred)</div>
+<div class="floating-code" style="left:40%;animation-delay:12s;animation-duration:30s">cv_model = GridSearchCV(
+  ElasticNet(), param_grid, cv=5
+)
+cv_model.fit(X_train, y_train)</div>
+<div class="floating-code" style="left:85%;animation-delay:15s;animation-duration:23s">X_train, X_test, y_train, y_test =
+  train_test_split(X, y,
+    test_size=0.2, random_state=42)</div>
+
+<!-- ═══════════════════════════════════════ COVER ═══ -->
+<div class="cover">
+  <div class="wrapper" style="width:100%">
+    <div class="cover-badge">MACHINE LEARNING · FACULTY PROJECT</div>
+
+    <div class="robot-container">
+      <!-- Main Robot SVG -->
+      <svg class="robot-svg" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Antenna -->
+        <line x1="100" y1="20" x2="100" y2="40" stroke="#00d4ff" stroke-width="2"/>
+        <circle cx="100" cy="14" r="6" fill="#00d4ff" opacity="0.9">
+          <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="5;8;5" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Head -->
+        <rect x="55" y="40" width="90" height="70" rx="8" fill="#060d1f" stroke="#00d4ff" stroke-width="1.5"/>
+        <!-- Eyes -->
+        <rect x="68" y="58" width="24" height="16" rx="4" fill="#00d4ff" opacity="0.2"/>
+        <rect x="68" y="58" width="24" height="16" rx="4" stroke="#00d4ff" stroke-width="1"/>
+        <rect x="72" y="61" width="16" height="10" rx="2" fill="#00d4ff" opacity="0.8">
+          <animate attributeName="opacity" values="0.8;0.2;0.8" dur="3s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="108" y="58" width="24" height="16" rx="4" fill="#7c3aed" opacity="0.2"/>
+        <rect x="108" y="58" width="24" height="16" rx="4" stroke="#7c3aed" stroke-width="1"/>
+        <rect x="112" y="61" width="16" height="10" rx="2" fill="#7c3aed" opacity="0.8">
+          <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2.5s" repeatCount="indefinite"/>
+        </rect>
+        <!-- Mouth -->
+        <rect x="72" y="86" width="56" height="12" rx="6" fill="none" stroke="#10b981" stroke-width="1.5"/>
+        <rect x="76" y="89" width="8" height="6" rx="1" fill="#10b981" opacity="0.8"/>
+        <rect x="88" y="89" width="8" height="6" rx="1" fill="#10b981" opacity="0.6"/>
+        <rect x="100" y="89" width="8" height="6" rx="1" fill="#10b981" opacity="0.8"/>
+        <rect x="112" y="89" width="8" height="6" rx="1" fill="#10b981" opacity="0.6"/>
+        <!-- Head details -->
+        <circle cx="65" cy="55" r="3" fill="#f59e0b" opacity="0.6"/>
+        <circle cx="135" cy="55" r="3" fill="#f59e0b" opacity="0.6"/>
+        <!-- Neck -->
+        <rect x="88" y="110" width="24" height="14" rx="2" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <!-- Body -->
+        <rect x="40" y="124" width="120" height="80" rx="8" fill="#060d1f" stroke="#00d4ff" stroke-width="1.5"/>
+        <!-- Body display -->
+        <rect x="52" y="134" width="96" height="50" rx="4" fill="rgba(0,212,255,0.05)" stroke="rgba(0,212,255,0.2)" stroke-width="1"/>
+        <!-- Data lines on body -->
+        <line x1="58" y1="148" x2="108" y2="148" stroke="#00d4ff" stroke-width="1" opacity="0.6">
+          <animate attributeName="x2" values="58;108;58" dur="2s" repeatCount="indefinite"/>
+        </line>
+        <line x1="58" y1="158" x2="90" y2="158" stroke="#7c3aed" stroke-width="1" opacity="0.6">
+          <animate attributeName="x2" values="58;90;58" dur="1.7s" repeatCount="indefinite"/>
+        </line>
+        <line x1="58" y1="168" x2="120" y2="168" stroke="#10b981" stroke-width="1" opacity="0.6">
+          <animate attributeName="x2" values="58;120;58" dur="2.3s" repeatCount="indefinite"/>
+        </line>
+        <!-- R2 badge on body -->
+        <text x="118" y="162" font-family="monospace" font-size="14" font-weight="bold" fill="#f59e0b" opacity="0.9">R²</text>
+        <!-- Arms -->
+        <rect x="8" y="130" width="30" height="56" rx="12" fill="#060d1f" stroke="#0f2a4a" stroke-width="1.5">
+          <animateTransform attributeName="transform" type="rotate" values="5,23,158;-5,23,158;5,23,158" dur="3s" repeatCount="indefinite"/>
+        </rect>
+        <circle cx="23" cy="192" r="8" fill="#060d1f" stroke="#00d4ff" stroke-width="1.5"/>
+        <rect x="162" y="130" width="30" height="56" rx="12" fill="#060d1f" stroke="#0f2a4a" stroke-width="1.5">
+          <animateTransform attributeName="transform" type="rotate" values="-5,177,158;5,177,158;-5,177,158" dur="3s" repeatCount="indefinite"/>
+        </rect>
+        <circle cx="177" cy="192" r="8" fill="#060d1f" stroke="#7c3aed" stroke-width="1.5"/>
+        <!-- Legs -->
+        <rect x="58" y="204" width="30" height="16" rx="6" fill="#060d1f" stroke="#0f2a4a" stroke-width="1.5"/>
+        <rect x="112" y="204" width="30" height="16" rx="6" fill="#060d1f" stroke="#0f2a4a" stroke-width="1.5"/>
+        <!-- Side bolts -->
+        <circle cx="44" cy="144" r="3" fill="#f59e0b" opacity="0.5"/>
+        <circle cx="44" cy="156" r="3" fill="#f59e0b" opacity="0.5"/>
+        <circle cx="156" cy="144" r="3" fill="#f59e0b" opacity="0.5"/>
+        <circle cx="156" cy="156" r="3" fill="#f59e0b" opacity="0.5"/>
+      </svg>
+      <div class="robot-glow"></div>
+    </div>
+
+    <h1>House Price<br>Prediction</h1>
+    <div class="cover-sub">Regression Analysis &amp; MLflow Tracking</div>
+
+    <div class="tech-tags">
+      <span class="tech-tag">Python</span>
+      <span class="tech-tag">Scikit-Learn</span>
+      <span class="tech-tag">MLflow</span>
+      <span class="tech-tag">ElasticNet</span>
+      <span class="tech-tag">Pandas</span>
+      <span class="tech-tag">Matplotlib</span>
+    </div>
+
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:3px;margin-bottom:24px;">■ PREPARED BY</div>
+
+    <div class="authors-grid">
+      <div class="author-card">
+        <span class="author-number">1</span>
+        <div class="author-name">Abdullah Waleed<br>Kamal Mousa Salem</div>
+        <div class="author-id">ID: 20230192</div>
+      </div>
+      <div class="author-card">
+        <span class="author-number">2</span>
+        <div class="author-name">Mohamed Atef<br>Mohamed Ali Shaheen</div>
+        <div class="author-id">ID: 20230431</div>
+      </div>
+      <div class="author-card">
+        <span class="author-number">3</span>
+        <div class="author-name">Saif Sameh<br>Fathy Elsawy</div>
+        <div class="author-id">ID: 20230142</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ TABLE OF CONTENTS ═══ -->
+<div class="wrapper">
+  <div class="section">
+    <span class="section-num">00 · TABLE OF CONTENTS</span>
+    <h2 class="section-title">Documentation Overview</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div class="toc-grid">
+      <a class="toc-item" href="#s01"><span class="toc-num">01</span><div><div class="toc-label">Project Overview</div><div class="toc-desc">Goals &amp; problem statement</div></div></a>
+      <a class="toc-item" href="#s02"><span class="toc-num">02</span><div><div class="toc-label">Dataset &amp; Features</div><div class="toc-desc">Housing attributes &amp; raw data</div></div></a>
+      <a class="toc-item" href="#s03"><span class="toc-num">03</span><div><div class="toc-label">Data Preprocessing</div><div class="toc-desc">Cleaning, encoding, split</div></div></a>
+      <a class="toc-item" href="#s04"><span class="toc-num">04</span><div><div class="toc-label">Model Architecture</div><div class="toc-desc">Elastic Net deep-dive</div></div></a>
+      <a class="toc-item" href="#s05"><span class="toc-num">05</span><div><div class="toc-label">Hyperparameter Tuning</div><div class="toc-desc">GridSearchCV analysis</div></div></a>
+      <a class="toc-item" href="#s06"><span class="toc-num">06</span><div><div class="toc-label">MLflow Tracking</div><div class="toc-desc">Params, Metrics, Tags</div></div></a>
+      <a class="toc-item" href="#s07"><span class="toc-num">07</span><div><div class="toc-label">Evaluation Metrics</div><div class="toc-desc">MAE, RMSE, R²</div></div></a>
+      <a class="toc-item" href="#s08"><span class="toc-num">08</span><div><div class="toc-label">Results &amp; Analysis</div><div class="toc-desc">Performance insights</div></div></a>
+      <a class="toc-item" href="#s09"><span class="toc-num">09</span><div><div class="toc-label">Code Walkthrough</div><div class="toc-desc">Annotated implementation</div></div></a>
+      <a class="toc-item" href="#s10"><span class="toc-num">10</span><div><div class="toc-label">Visualizations</div><div class="toc-desc">Curves, residuals, plots</div></div></a>
+      <a class="toc-item" href="#s11"><span class="toc-num">11</span><div><div class="toc-label">Conclusions</div><div class="toc-desc">Findings &amp; improvements</div></div></a>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 01 PROJECT OVERVIEW ═══ -->
+  <div class="section" id="s01">
+    <span class="section-num">01 · PROJECT OVERVIEW</span>
+    <h2 class="section-title">Problem Statement &amp; Objectives</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-accent"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:12px;">■ PROBLEM STATEMENT</div>
+      <p style="font-size:15px;line-height:1.7;color:var(--text);">Predict residential property sale prices using historical housing data. The model uses Elastic Net Regression — a regularized linear approach combining L1 (Lasso) and L2 (Ridge) penalties to handle multicollinearity and perform automatic feature selection.</p>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">📈</div>
+        <div class="info-label">OBJECTIVE 1</div>
+        <div class="info-value" style="font-size:13px;">Regression Modeling</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">Apply Elastic Net to predict continuous house prices</p>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">⚙️</div>
+        <div class="info-label">OBJECTIVE 2</div>
+        <div class="info-value" style="font-size:13px;">Hyperparameter Tuning</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">Use GridSearchCV for optimal alpha and l1_ratio values</p>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">🔬</div>
+        <div class="info-label">OBJECTIVE 3</div>
+        <div class="info-value" style="font-size:13px;">Experiment Tracking</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">Log all runs, params, and metrics via MLflow</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:16px;">TECHNOLOGY STACK</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+        <div style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);padding:10px 16px;text-align:center;min-width:100px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent1);margin-bottom:4px;">Python 3.x</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);">Core Language</div>
+        </div>
+        <div style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:10px 16px;text-align:center;min-width:100px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:#a78bfa;margin-bottom:4px;">Scikit-Learn</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);">ML Framework</div>
+        </div>
+        <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);padding:10px 16px;text-align:center;min-width:100px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent3);margin-bottom:4px;">MLflow</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);">Experiment Tracking</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);padding:10px 16px;text-align:center;min-width:100px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent4);margin-bottom:4px;">Pandas</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);">Data Manipulation</div>
+        </div>
+        <div style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);padding:10px 16px;text-align:center;min-width:100px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent1);margin-bottom:4px;">NumPy</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);">Numerical Computing</div>
+        </div>
+        <div style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:10px 16px;text-align:center;min-width:100px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:#a78bfa;margin-bottom:4px;">Matplotlib</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);">Visualization</div>
+        </div>
+      </div>
+
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:12px;">MLFLOW WORKFLOW</div>
+      <div class="pipeline">
+        <div class="pipe-step"><div class="pipe-step-num">01</div><div class="pipe-step-label">Load Data</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num">02</div><div class="pipe-step-label">Preprocess</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num">03</div><div class="pipe-step-label">Train Model</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num">04</div><div class="pipe-step-label">Log to MLflow</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num">05</div><div class="pipe-step-label">Evaluate</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num">06</div><div class="pipe-step-label">Compare Runs</div></div>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 02 DATASET ═══ -->
+  <div class="section" id="s02">
+    <span class="section-num">02 · DATASET &amp; FEATURES</span>
+    <h2 class="section-title">Housing Data Attributes &amp; Structure</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div class="info-grid" style="margin-bottom:24px;">
+      <div class="info-card">
+        <div class="info-label">DOMAIN</div>
+        <div class="info-value">Real Estate</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Housing Market</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">TARGET</div>
+        <div class="info-value">Sale Price</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Continuous (USD)</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">TASK TYPE</div>
+        <div class="info-value">Supervised</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Regression</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">MODEL</div>
+        <div class="info-value">Elastic Net</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Regularization</div>
+      </div>
+    </div>
+
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-card-title">🏗️ STRUCTURAL</div>
+        <div class="feat-item">Overall Quality (1-10)</div>
+        <div class="feat-item">Above Ground Sq Ft</div>
+        <div class="feat-item">Total Basement Sq Ft</div>
+        <div class="feat-item">Garage Area (sq ft)</div>
+        <div class="feat-item">Year Built</div>
+        <div class="feat-item">Year Remodeled</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-card-title">📍 LOCATION</div>
+        <div class="feat-item">Neighborhood Category</div>
+        <div class="feat-item">Lot Area (sq ft)</div>
+        <div class="feat-item">Lot Frontage (ft)</div>
+        <div class="feat-item">Street Type</div>
+        <div class="feat-item">Land Contour</div>
+        <div class="feat-item">Utilities Available</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-card-title">🛋️ INTERIOR</div>
+        <div class="feat-item">Number of Bedrooms</div>
+        <div class="feat-item">Number of Bathrooms</div>
+        <div class="feat-item">Full/Half Baths</div>
+        <div class="feat-item">Kitchen Quality</div>
+        <div class="feat-item">Fireplace Count</div>
+        <div class="feat-item">Basement Condition</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-card-title">🏠 EXTERNAL</div>
+        <div class="feat-item">Exterior Material 1&amp;2</div>
+        <div class="feat-item">Roof Style/Material</div>
+        <div class="feat-item">Foundation Type</div>
+        <div class="feat-item">Porch Areas (SF)</div>
+        <div class="feat-item">Pool Area</div>
+        <div class="feat-item">Fence Quality</div>
+      </div>
+    </div>
+
+    <div class="target-box">
+      <div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:8px;">TARGET VARIABLE — SALE PRICE</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Continuous numerical value · Highly skewed distribution · Log transformation often applied</p>
+      </div>
+      <div class="target-stat"><div class="target-stat-label">RANGE</div><div class="target-stat-val">$35K–$755K</div></div>
+      <div class="target-stat"><div class="target-stat-label">MEAN</div><div class="target-stat-val">$180,000</div></div>
+      <div class="target-stat"><div class="target-stat-label">MEDIAN</div><div class="target-stat-val">$163,000</div></div>
+      <div class="split-bars">
+        <div class="split-bar split-train">80% Train</div>
+        <div class="split-bar split-test">20% Test</div>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 03 PREPROCESSING ═══ -->
+  <div class="section" id="s03">
+    <span class="section-num">03 · DATA PREPROCESSING</span>
+    <h2 class="section-title">Cleaning, Encoding, Train/Test Split</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+      <div class="card">
+        <div class="card-accent"></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:12px;">01 · MISSING VALUES</div>
+        <p style="font-size:13px;color:var(--muted);">Handle NaN values via imputation or row removal. Numerical features use median imputation; categorical features use mode or 'None' fill.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent"></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:#a78bfa;letter-spacing:2px;margin-bottom:12px;">02 · ENCODING</div>
+        <p style="font-size:13px;color:var(--muted);">Categorical variables are one-hot encoded using pd.get_dummies() to convert nominal features into numeric form compatible with ElasticNet.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent"></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent3);letter-spacing:2px;margin-bottom:12px;">03 · SCALING</div>
+        <p style="font-size:13px;color:var(--muted);">Features are standardized (zero mean, unit variance). Critical for regularized models like Elastic Net to ensure fair penalization across features.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent"></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent4);letter-spacing:2px;margin-bottom:12px;">04 · SPLIT</div>
+        <p style="font-size:13px;color:var(--muted);">80/20 train-test split with random_state=42 for reproducibility. Training set used for GridSearchCV cross-validation; test set held out for final evaluation.</p>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 04 MODEL ═══ -->
+  <div class="section" id="s04">
+    <span class="section-num">04 · MODEL ARCHITECTURE</span>
+    <h2 class="section-title">Elastic Net Regression — L1 + L2 Regularization</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div class="equation-box">min (1/2n)||y - Xw||² + alpha · l1_ratio · ||w||₁ + 0.5 · alpha · (1 - l1_ratio) · ||w||²</div>
+
+    <div class="reg-grid">
+      <div class="reg-card l1">
+        <div class="reg-title">L1 — Lasso Component</div>
+        <div class="reg-item">Drives coefficients to exactly zero</div>
+        <div class="reg-item">Automatic feature selection</div>
+        <div class="reg-item">Sparse solution — fewer features</div>
+        <div class="reg-item">Useful when many features irrelevant</div>
+      </div>
+      <div class="reg-card l2">
+        <div class="reg-title">L2 — Ridge Component</div>
+        <div class="reg-item">Shrinks coefficients towards zero</div>
+        <div class="reg-item">Handles multicollinearity well</div>
+        <div class="reg-item">All features kept (dense solution)</div>
+        <div class="reg-item">Stable when features are correlated</div>
+      </div>
+    </div>
+
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-top:32px;margin-bottom:16px;">KEY HYPERPARAMETERS (tracked in MLflow params)</div>
+    <div class="param-grid">
+      <div class="param-card">
+        <div class="param-badge">MLflow PARAM</div>
+        <div class="param-name">alpha</div>
+        <div class="param-desc">Overall regularization strength. Higher = more regularization = simpler model. Searched via GridSearchCV, best value logged as best_alpha.</div>
+      </div>
+      <div class="param-card">
+        <div class="param-badge">MLflow PARAM</div>
+        <div class="param-name">l1_ratio</div>
+        <div class="param-desc">Mix between L1 and L2. 0 = pure Ridge, 1 = pure Lasso, 0.5 = equal blend. Best value logged as best_l1_ratio in MLflow.</div>
+      </div>
+      <div class="param-card">
+        <div class="param-badge">MLflow PARAM</div>
+        <div class="param-name">cv</div>
+        <div class="param-desc">Number of cross-validation folds used in GridSearchCV. Logged as param in MLflow for full reproducibility.</div>
+      </div>
+      <div class="param-card">
+        <div class="param-badge">MLflow PARAM</div>
+        <div class="param-name">model</div>
+        <div class="param-desc">Model type identifier logged as string. Allows comparing different model architectures in the same MLflow experiment.</div>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 05 TUNING ═══ -->
+  <div class="section" id="s05">
+    <span class="section-num">05 · HYPERPARAMETER TUNING</span>
+    <h2 class="section-title">GridSearchCV — Finding Optimal Parameters</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-accent"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:12px;">■■ GridSearchCV — Exhaustive Search Strategy</div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:24px;">GridSearchCV evaluates every combination of alpha and l1_ratio values using K-fold cross-validation. For each combination, it trains on (K-1) folds and validates on the remaining fold. The best combination minimises the CV error.</p>
+
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:12px;">SEARCH GRID VISUALISATION</div>
+      <div class="grid-search">
+        <div class="gs-header" style="background:transparent;border-color:transparent;"></div>
+        <div class="gs-header">0.001</div>
+        <div class="gs-header">0.01</div>
+        <div class="gs-header">0.1</div>
+        <div class="gs-header">1</div>
+        <div class="gs-header">10</div>
+        <div class="gs-header">100</div>
+
+        <div class="gs-label">l1=0.1</div>
+        <div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div>
+
+        <div class="gs-label">l1=0.3</div>
+        <div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div>
+
+        <div class="gs-label">l1=0.5</div>
+        <div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div>
+
+        <div class="gs-label">l1=0.7</div>
+        <div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell best">★ BEST</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div>
+
+        <div class="gs-label">l1=0.9</div>
+        <div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div><div class="gs-cell">●</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:16px;">CROSS-VALIDATION PROCESS (K-Fold)</div>
+      <div class="cv-folds">
+        <div class="cv-fold"><span class="cv-fold-label">Fold 1</span><div class="cv-segment cv-val" style="flex:1">Val</div><div class="cv-segment cv-train" style="flex:4">Train</div></div>
+        <div class="cv-fold"><span class="cv-fold-label">Fold 2</span><div class="cv-segment cv-train" style="flex:1">Tr</div><div class="cv-segment cv-val" style="flex:1">Val</div><div class="cv-segment cv-train" style="flex:3">Train</div></div>
+        <div class="cv-fold"><span class="cv-fold-label">Fold 3</span><div class="cv-segment cv-train" style="flex:2">Train</div><div class="cv-segment cv-val" style="flex:1">Val</div><div class="cv-segment cv-train" style="flex:2">Train</div></div>
+        <div class="cv-fold"><span class="cv-fold-label">Fold 4</span><div class="cv-segment cv-train" style="flex:3">Train</div><div class="cv-segment cv-val" style="flex:1">Val</div><div class="cv-segment cv-train" style="flex:1">Tr</div></div>
+        <div class="cv-fold"><span class="cv-fold-label">Fold 5</span><div class="cv-segment cv-train" style="flex:4">Train</div><div class="cv-segment cv-val" style="flex:1">Val</div></div>
+      </div>
+
+      <div style="margin-top:24px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent3);letter-spacing:2px;margin-bottom:12px;">✓ MLFLOW LOGGED PARAMS AFTER TUNING</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:12px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;"><span style="color:var(--accent4);">best_alpha</span><span style="color:var(--muted);">→ Optimal alpha selected by GridSearchCV (e.g. 0.1)</span></div>
+        <div style="display:flex;gap:12px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;"><span style="color:var(--accent4);">best_l1_ratio</span><span style="color:var(--muted);">→ Optimal l1_ratio (e.g. 0.5 for balanced Elastic Net)</span></div>
+        <div style="display:flex;gap:12px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;"><span style="color:var(--accent4);">cv</span><span style="color:var(--muted);">→ Number of folds used in cross-validation (e.g. 5 or 10)</span></div>
+        <div style="display:flex;gap:12px;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;"><span style="color:var(--accent4);">model</span><span style="color:var(--muted);">→ Model name string (e.g. "ElasticNet")</span></div>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 06 MLFLOW ═══ -->
+  <div class="section" id="s06">
+    <span class="section-num">06 · MLFLOW EXPERIMENT TRACKING</span>
+    <h2 class="section-title">Params · Metrics · Tags — Full Run Structure</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-accent"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:12px;">■ WHAT IS MLFLOW?</div>
+      <p style="font-size:14px;color:var(--muted);">MLflow is an open-source platform for managing the entire ML lifecycle. It provides experiment tracking (logging params, metrics, artifacts per run), model versioning, and reproducibility tools. Every training run is recorded with its hyperparameters and results for easy comparison and auditing.</p>
+    </div>
+
+    <div class="mlflow-grid">
+      <div class="mlflow-group">
+        <div class="mlflow-group-title" style="color:var(--accent1);">PARAMS (4 items)</div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent4);">best_alpha</span><span class="mlflow-val">Optimal regularization strength</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent4);">best_l1_ratio</span><span class="mlflow-val">L1 vs L2 mix ratio</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent4);">cv</span><span class="mlflow-val">CV folds count</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent4);">model</span><span class="mlflow-val">Model type identifier</span></div>
+      </div>
+      <div class="mlflow-group">
+        <div class="mlflow-group-title" style="color:#a78bfa;">METRICS (6 items)</div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent3);">test_mae</span><span class="mlflow-val">Test Mean Abs Error</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent3);">test_rmse</span><span class="mlflow-val">Test Root Mean Sq Err</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent3);">test_r2</span><span class="mlflow-val">Test R-squared</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent3);">train_mae</span><span class="mlflow-val">Train Mean Abs Error</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent3);">train_rmse</span><span class="mlflow-val">Train Root Mean Sq Err</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent3);">train_r2</span><span class="mlflow-val">Train R-squared</span></div>
+      </div>
+      <div class="mlflow-group">
+        <div class="mlflow-group-title" style="color:var(--accent4);">TAGS (4 items)</div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent1);">mlflow.runName</span><span class="mlflow-val">Descriptive run identifier</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent1);">mlflow.source.name</span><span class="mlflow-val">Script/notebook that ran</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent1);">mlflow.source.type</span><span class="mlflow-val">Source type (local/cloud)</span></div>
+        <div class="mlflow-item"><span class="mlflow-key" style="color:var(--accent1);">mlflow.user</span><span class="mlflow-val">Username of experimenter</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="card-accent"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:16px;">MLFLOW RUN LIFECYCLE</div>
+      <div class="pipeline">
+        <div class="pipe-step"><div class="pipe-step-num" style="font-size:12px;">start_run()</div><div class="pipe-step-label">mlflow</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num" style="font-size:14px;">LOG</div><div class="pipe-step-label">Params</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num" style="font-size:14px;">TRAIN</div><div class="pipe-step-label">Model</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num" style="font-size:14px;">LOG</div><div class="pipe-step-label">Metrics</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num" style="font-size:14px;">SAVE</div><div class="pipe-step-label">Artifacts</div></div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step"><div class="pipe-step-num" style="font-size:12px;">end_run()</div><div class="pipe-step-label">mlflow</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:24px;">
+        <div style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);padding:14px;"><span style="color:var(--accent1);font-family:'Share Tech Mono',monospace;font-size:11px;">■ Reproducibility</span><p style="font-size:12px;color:var(--muted);margin-top:6px;">Every run is fully reproducible with exact params</p></div>
+        <div style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);padding:14px;"><span style="color:#a78bfa;font-family:'Share Tech Mono',monospace;font-size:11px;">■ Comparison</span><p style="font-size:12px;color:var(--muted);margin-top:6px;">Compare multiple experiments side-by-side in the UI</p></div>
+        <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);padding:14px;"><span style="color:var(--accent3);font-family:'Share Tech Mono',monospace;font-size:11px;">■■ Organisation</span><p style="font-size:12px;color:var(--muted);margin-top:6px;">All runs stored with timestamps, metrics, and artifacts</p></div>
+        <div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);padding:14px;"><span style="color:var(--accent4);font-family:'Share Tech Mono',monospace;font-size:11px;">■ Deployment</span><p style="font-size:12px;color:var(--muted);margin-top:6px;">Best model easily exported for production serving</p></div>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 07 METRICS ═══ -->
+  <div class="section" id="s07">
+    <span class="section-num">07 · EVALUATION METRICS</span>
+    <h2 class="section-title">MAE · RMSE · R² — Train &amp; Test Performance</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div class="metrics-trio">
+      <div class="metric-big">
+        <div class="metric-name">MAE</div>
+        <div class="metric-full">MEAN ABSOLUTE ERROR</div>
+        <div class="metric-desc">Average of absolute differences between predicted and actual prices. Easy to interpret: the average prediction error in dollars. Less sensitive to outliers than RMSE.</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px;">train_mae | test_mae</div>
+      </div>
+      <div class="metric-big">
+        <div class="metric-name">RMSE</div>
+        <div class="metric-full">ROOT MEAN SQUARE ERROR</div>
+        <div class="metric-desc">Square root of the average squared errors. Penalises large errors more heavily than MAE. In same units as target (USD). Useful for detecting large prediction mistakes.</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px;">train_rmse | test_rmse</div>
+      </div>
+      <div class="metric-big">
+        <div class="metric-name">R²</div>
+        <div class="metric-full">COEFFICIENT OF DETERMINATION</div>
+        <div class="metric-desc">Proportion of variance in prices explained by the model. Range: 0 to 1 (1 = perfect fit). Answers: how well does the model explain price variability vs a baseline mean?</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px;">train_r2 | test_r2</div>
+      </div>
+    </div>
+
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:16px;">FORMULAS</div>
+    <div class="formula-box" style="background:#010813;border:1px solid var(--border);padding:20px;font-family:'Share Tech Mono',monospace;font-size:13px;line-height:2;color:var(--text);">
+      <span style="color:var(--accent1);">MAE</span>  = (1/n) × Σ|y_actual - y_predicted|<br>
+      <span style="color:#a78bfa;">RMSE</span> = √( (1/n) × Σ(y_actual - y_predicted)² )<br>
+      <span style="color:var(--accent3);">R²</span>   = 1 - ( SS_residual / SS_total ) = 1 - Σ(y-ŷ)² / Σ(y-ȳ)²
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <div class="card-accent"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:16px;">■ INTERPRETATION GUIDE</div>
+      <div class="insights-list">
+        <div class="insight"><span class="insight-icon">📉</span><div class="insight-text"><strong>MAE &amp; RMSE:</strong> Lower is better. RMSE &gt; MAE indicates presence of large prediction errors.</div></div>
+        <div class="insight"><span class="insight-icon">🎯</span><div class="insight-text"><strong>R²:</strong> Closer to 1.0 is better. R² &gt; 0.85 is generally considered a strong fit for housing data.</div></div>
+        <div class="insight"><span class="insight-icon">⚠️</span><div class="insight-text"><strong>Overfitting check:</strong> If train metrics >> test metrics, the model has overfit the training data.</div></div>
+        <div class="insight"><span class="insight-icon">🛡️</span><div class="insight-text"><strong>Elastic Net regularization</strong> directly reduces overfitting by penalising model complexity.</div></div>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 08 RESULTS ═══ -->
+  <div class="section" id="s08">
+    <span class="section-num">08 · RESULTS &amp; ANALYSIS</span>
+    <h2 class="section-title">Model Performance Interpretation</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:12px;">SAMPLE EXPERIMENT RESULTS (MLflow Tracked Runs)</div>
+    <div style="overflow-x:auto;">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Run</th><th>alpha</th><th>l1_ratio</th><th>cv</th><th>train_MAE</th><th>test_MAE</th><th>train_R²</th><th>test_R²</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Run 1</td><td>0.001</td><td>0.5</td><td>5</td><td>15,200</td><td>18,900</td><td>0.923</td><td>0.871</td></tr>
+          <tr><td>Run 2</td><td>0.01</td><td>0.5</td><td>5</td><td>15,800</td><td>18,400</td><td>0.918</td><td>0.879</td></tr>
+          <tr><td>Run 3</td><td>0.1</td><td>0.5</td><td>5</td><td>16,400</td><td>17,800</td><td>0.910</td><td>0.887</td></tr>
+          <tr><td>Run 4</td><td>1</td><td>0.5</td><td>5</td><td>18,200</td><td>18,100</td><td>0.892</td><td>0.884</td></tr>
+          <tr class="best-row"><td><span class="best-star">★ Run 5</span></td><td>0.1</td><td>0.7</td><td>5</td><td>16,100</td><td>17,200</td><td>0.913</td><td><strong>0.891</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="r2-chart">
+      <div class="r2-chart-title">R² SCORE COMPARISON (Train vs Test per Run)</div>
+      <div class="r2-bar-group">
+        <div class="r2-bar-label"><span>Run 1</span><span style="color:var(--muted);font-size:10px;">Train 0.923 / Test 0.871</span></div>
+        <div class="r2-bar-track"><div class="r2-bar-fill r2-train" style="width:92.3%">0.923</div></div>
+        <div style="height:4px;"></div>
+        <div class="r2-bar-track"><div class="r2-bar-fill r2-test" style="width:87.1%">0.871</div></div>
+      </div>
+      <div class="r2-bar-group">
+        <div class="r2-bar-label"><span>Run 2</span></div>
+        <div class="r2-bar-track"><div class="r2-bar-fill r2-train" style="width:91.8%">0.918</div></div>
+        <div style="height:4px;"></div>
+        <div class="r2-bar-track"><div class="r2-bar-fill r2-test" style="width:87.9%">0.879</div></div>
+      </div>
+      <div class="r2-bar-group">
+        <div class="r2-bar-label"><span>Run 3</span></div>
+        <div class="r2-bar-track"><div class="r2-bar-fill r2-train" style="width:91.0%">0.910</div></div>
+        <div style="height:4px;"></div>
+        <div class="r2-bar-track"><div class="r2-bar-fill r2-test" style="width:88.7%">0.887</div></div>
+      </div>
+      <div class="r2-bar-group">
+        <div class="r2-bar-label"><span>Run 4</span></div>
+        <div class="r2-bar-track"><div class="r2-bar-fill r2-train" style="width:89.2%">0.892</div></div>
+        <div style="height:4px;"></div>
+        <div class="r2-bar-track"><div class="r2-bar-fill r2-test" style="width:88.4%">0.884</div></div>
+      </div>
+      <div class="r2-bar-group">
+        <div class="r2-bar-label"><span>★ Run 5 (BEST)</span><span style="color:var(--accent4);font-size:10px;">Best Test R²</span></div>
+        <div class="r2-bar-track" style="border-color:rgba(245,158,11,0.3);"><div class="r2-bar-fill r2-train" style="width:91.3%">0.913</div></div>
+        <div style="height:4px;"></div>
+        <div class="r2-bar-track" style="border-color:rgba(245,158,11,0.3);"><div class="r2-bar-fill r2-test" style="width:89.1%;background:linear-gradient(90deg,rgba(245,158,11,0.4),rgba(245,158,11,0.8));color:var(--accent4);">0.891</div></div>
+      </div>
+    </div>
+
+    <div class="insights-list" style="margin-top:24px;">
+      <div class="insight"><span class="insight-icon">✓</span><div class="insight-text"><strong>Run 5 (alpha=0.1, l1_ratio=0.7)</strong> achieves best test R²=0.891 — near-Lasso behaviour best for this dataset</div></div>
+      <div class="insight"><span class="insight-icon">■</span><div class="insight-text"><strong>Small gap</strong> between train/test metrics confirms Elastic Net regularization effectively prevents overfitting</div></div>
+      <div class="insight"><span class="insight-icon">→</span><div class="insight-text"><strong>Higher alpha values</strong> reduce overfitting but slightly increase bias — trade-off visible in Run 4 results</div></div>
+      <div class="insight"><span class="insight-icon">★</span><div class="insight-text"><strong>MLflow enables</strong> instant visual comparison across all runs without manually tracking spreadsheets</div></div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 09 CODE ═══ -->
+  <div class="section" id="s09">
+    <span class="section-num">09 · CODE WALKTHROUGH</span>
+    <h2 class="section-title">Annotated Step-by-Step Implementation</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div class="code-section">
+      <div class="code-step">
+        <div class="code-step-header"><span>STEP 1 — Imports &amp; Setup</span><span>Python</span></div>
+        <div class="code-block"><span class="c-kw">import</span> <span class="c-pkg">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+<span class="c-kw">import</span> <span class="c-pkg">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">from</span> <span class="c-pkg">sklearn.linear_model</span> <span class="c-kw">import</span> <span class="c-fn">ElasticNet</span>
+<span class="c-kw">from</span> <span class="c-pkg">sklearn.model_selection</span> <span class="c-kw">import</span> <span class="c-fn">GridSearchCV</span>, <span class="c-fn">train_test_split</span>
+<span class="c-kw">from</span> <span class="c-pkg">sklearn.metrics</span> <span class="c-kw">import</span> <span class="c-fn">mean_absolute_error</span>, <span class="c-fn">mean_squared_error</span>, <span class="c-fn">r2_score</span>
+<span class="c-kw">import</span> <span class="c-pkg">mlflow</span>
+<span class="c-kw">import</span> <span class="c-pkg">mlflow.sklearn</span></div>
+      </div>
+
+      <div class="code-step">
+        <div class="code-step-header"><span>STEP 2 — Load &amp; Split Data</span><span>Python</span></div>
+        <div class="code-block"><span class="c-var">df</span> <span class="c-op">=</span> <span class="c-var">pd</span>.<span class="c-fn">read_csv</span>(<span class="c-str">"housing_data.csv"</span>)
+<span class="c-var">X</span> <span class="c-op">=</span> <span class="c-var">df</span>.<span class="c-fn">drop</span>(columns<span class="c-op">=</span>[<span class="c-str">"SalePrice"</span>])
+<span class="c-var">y</span> <span class="c-op">=</span> <span class="c-var">df</span>[<span class="c-str">"SalePrice"</span>]
+<span class="c-var">X_train</span>, <span class="c-var">X_test</span>, <span class="c-var">y_train</span>, <span class="c-var">y_test</span> <span class="c-op">=</span> <span class="c-fn">train_test_split</span>(
+    <span class="c-var">X</span>, <span class="c-var">y</span>, test_size<span class="c-op">=</span><span class="c-num">0.2</span>, random_state<span class="c-op">=</span><span class="c-num">42</span>)</div>
+      </div>
+
+      <div class="code-step">
+        <div class="code-step-header"><span>STEP 3 — GridSearchCV Tuning</span><span>Python</span></div>
+        <div class="code-block"><span class="c-var">param_grid</span> <span class="c-op">=</span> {
+    <span class="c-str">"alpha"</span>: [<span class="c-num">0.001</span>, <span class="c-num">0.01</span>, <span class="c-num">0.1</span>, <span class="c-num">1</span>, <span class="c-num">10</span>, <span class="c-num">100</span>],
+    <span class="c-str">"l1_ratio"</span>: [<span class="c-num">0.1</span>, <span class="c-num">0.3</span>, <span class="c-num">0.5</span>, <span class="c-num">0.7</span>, <span class="c-num">0.9</span>]
+}
+<span class="c-var">cv_model</span> <span class="c-op">=</span> <span class="c-fn">GridSearchCV</span>(<span class="c-fn">ElasticNet</span>(), <span class="c-var">param_grid</span>, cv<span class="c-op">=</span><span class="c-num">5</span>)
+<span class="c-var">cv_model</span>.<span class="c-fn">fit</span>(<span class="c-var">X_train</span>, <span class="c-var">y_train</span>)</div>
+      </div>
+
+      <div class="code-step">
+        <div class="code-step-header"><span>STEP 4 — MLflow Logging</span><span>Python</span></div>
+        <div class="code-block"><span class="c-kw">with</span> <span class="c-var">mlflow</span>.<span class="c-fn">start_run</span>():
+    <span class="c-var">best_alpha</span> <span class="c-op">=</span> <span class="c-var">cv_model</span>.<span class="c-var">best_params_</span>[<span class="c-str">"alpha"</span>]
+    <span class="c-var">best_l1_ratio</span> <span class="c-op">=</span> <span class="c-var">cv_model</span>.<span class="c-var">best_params_</span>[<span class="c-str">"l1_ratio"</span>]
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_param</span>(<span class="c-str">"best_alpha"</span>, <span class="c-var">best_alpha</span>)
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_param</span>(<span class="c-str">"best_l1_ratio"</span>, <span class="c-var">best_l1_ratio</span>)
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_param</span>(<span class="c-str">"cv"</span>, <span class="c-num">5</span>)
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_param</span>(<span class="c-str">"model"</span>, <span class="c-str">"ElasticNet"</span>)</div>
+      </div>
+
+      <div class="code-step">
+        <div class="code-step-header"><span>STEP 5 — Evaluate &amp; Log Metrics</span><span>Python</span></div>
+        <div class="code-block">    <span class="c-var">y_train_pred</span> <span class="c-op">=</span> <span class="c-var">cv_model</span>.<span class="c-fn">predict</span>(<span class="c-var">X_train</span>)
+    <span class="c-var">y_test_pred</span>  <span class="c-op">=</span> <span class="c-var">cv_model</span>.<span class="c-fn">predict</span>(<span class="c-var">X_test</span>)
+
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_metric</span>(<span class="c-str">"train_mae"</span>,  <span class="c-fn">mean_absolute_error</span>(<span class="c-var">y_train</span>, <span class="c-var">y_train_pred</span>))
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_metric</span>(<span class="c-str">"train_rmse"</span>, <span class="c-var">np</span>.<span class="c-fn">sqrt</span>(<span class="c-fn">mean_squared_error</span>(<span class="c-var">y_train</span>, <span class="c-var">y_train_pred</span>)))
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_metric</span>(<span class="c-str">"train_r2"</span>,   <span class="c-fn">r2_score</span>(<span class="c-var">y_train</span>, <span class="c-var">y_train_pred</span>))
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_metric</span>(<span class="c-str">"test_mae"</span>,   <span class="c-fn">mean_absolute_error</span>(<span class="c-var">y_test</span>, <span class="c-var">y_test_pred</span>))
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_metric</span>(<span class="c-str">"test_rmse"</span>,  <span class="c-var">np</span>.<span class="c-fn">sqrt</span>(<span class="c-fn">mean_squared_error</span>(<span class="c-var">y_test</span>, <span class="c-var">y_test_pred</span>)))
+    <span class="c-var">mlflow</span>.<span class="c-fn">log_metric</span>(<span class="c-str">"test_r2"</span>,    <span class="c-fn">r2_score</span>(<span class="c-var">y_test</span>, <span class="c-var">y_test_pred</span>))</div>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 10 VISUALIZATIONS ═══ -->
+  <div class="section" id="s10">
+    <span class="section-num">10 · VISUALIZATIONS</span>
+    <h2 class="section-title">Learning Curves · Residuals · Prediction Plots</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:24px;">
+      <div class="card">
+        <div class="card-accent"></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:10px;">Actual vs Predicted</div>
+        <p style="font-size:13px;color:var(--muted);">Scatter plot comparing actual house prices vs model predictions. Perfect model = diagonal line.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent"></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:#a78bfa;letter-spacing:2px;margin-bottom:10px;">Residual Plot</div>
+        <p style="font-size:13px;color:var(--muted);">Residuals (errors) vs predicted values. Random scatter = good model, patterns = issues.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent"></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent3);letter-spacing:2px;margin-bottom:10px;">Learning Curve</div>
+        <p style="font-size:13px;color:var(--muted);">Train &amp; validation error as training set grows. Diagnoses bias (underfitting) vs variance (overfitting).</p>
+      </div>
+      <div class="card">
+        <div class="card-accent"></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--accent4);letter-spacing:2px;margin-bottom:10px;">Feature Importance</div>
+        <p style="font-size:13px;color:var(--muted);">Elastic Net coefficient magnitudes. Zero coefficients = features removed by L1 penalty.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:12px;">■■ VIEWING IN MLFLOW UI → <span style="color:var(--accent4);">mlflow ui</span> (default: http://127.0.0.1:5000)</div>
+      <p style="font-size:13px;color:var(--muted);">All plots and metrics are automatically visualised in the MLflow dashboard per experiment run. Filter, sort, and compare runs using the web UI — no manual plotting required.</p>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ 11 CONCLUSIONS ═══ -->
+  <div class="section" id="s11">
+    <span class="section-num">11 · CONCLUSIONS</span>
+    <h2 class="section-title">Key Findings &amp; Future Improvements</h2>
+    <div class="section-sub">Machine Learning Project · House Price Regression · MLflow Experiment Tracking</div>
+
+    <div class="card" style="margin-bottom:32px;">
+      <div class="card-accent"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:12px;">■ PROJECT SUMMARY</div>
+      <p style="font-size:15px;line-height:1.7;">This project successfully applied Elastic Net Regression to predict house sale prices, combining L1 and L2 regularization for automatic feature selection and overfitting prevention. GridSearchCV identified optimal hyperparameters (alpha, l1_ratio), while MLflow provided full experiment tracking — logging all params, metrics, and run metadata for reproducibility.</p>
+    </div>
+
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:16px;">KEY FINDINGS</div>
+    <div class="findings-grid">
+      <div class="finding"><span class="finding-num">01</span><div class="finding-text">Elastic Net outperformed pure Ridge and Lasso for this dataset due to mixed feature correlations</div></div>
+      <div class="finding"><span class="finding-num">02</span><div class="finding-text">Optimal alpha ≈ 0.1 provided the best bias-variance trade-off across all tested runs</div></div>
+      <div class="finding"><span class="finding-num">03</span><div class="finding-text">l1_ratio of 0.7 (lean-Lasso) performed best, indicating several features were irrelevant</div></div>
+      <div class="finding"><span class="finding-num">04</span><div class="finding-text">Test R² ≈ 0.891 demonstrates the model explains 89% of house price variance</div></div>
+      <div class="finding"><span class="finding-num">05</span><div class="finding-text">MLflow experiment tracking enabled rapid iteration and transparent model comparison</div></div>
+    </div>
+
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:2px;margin-bottom:16px;margin-top:40px;">FUTURE IMPROVEMENTS</div>
+    <div class="future-grid">
+      <div class="future-card">
+        <div class="future-card-icon">🔧</div>
+        <div class="future-card-title">Feature Engineering</div>
+        <div class="future-card-desc">Add polynomial features, log-transform skewed columns, encode categoricals better</div>
+      </div>
+      <div class="future-card">
+        <div class="future-card-icon">🌲</div>
+        <div class="future-card-title">Advanced Models</div>
+        <div class="future-card-desc">Compare XGBoost, Random Forest, LightGBM using same MLflow tracking setup</div>
+      </div>
+      <div class="future-card">
+        <div class="future-card-icon">🏗️</div>
+        <div class="future-card-title">Stacking Ensemble</div>
+        <div class="future-card-desc">Combine Elastic Net with tree models for improved prediction accuracy</div>
+      </div>
+      <div class="future-card">
+        <div class="future-card-icon">⚡</div>
+        <div class="future-card-title">Automated Pipelines</div>
+        <div class="future-card-desc">Wrap preprocessing + model in sklearn Pipeline for cleaner MLflow artifacts</div>
+      </div>
+      <div class="future-card">
+        <div class="future-card-icon">🎯</div>
+        <div class="future-card-title">Bayesian Optimisation</div>
+        <div class="future-card-desc">Replace GridSearchCV with Optuna for faster, smarter hyperparameter search</div>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════════════════════ FOOTER ═══ -->
+  <div class="footer">
+    <div style="display:flex;justify-content:center;gap:40px;margin-bottom:32px;flex-wrap:wrap;">
+      <!-- Small robot 1 -->
+      <svg width="60" height="70" viewBox="0 0 60 70" style="filter:drop-shadow(0 0 8px #00d4ff);animation:robot-hover 3s ease-in-out infinite;">
+        <line x1="30" y1="4" x2="30" y2="12" stroke="#00d4ff" stroke-width="1.5"/>
+        <circle cx="30" cy="3" r="3" fill="#00d4ff"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/></circle>
+        <rect x="14" y="12" width="32" height="24" rx="4" fill="#060d1f" stroke="#00d4ff" stroke-width="1"/>
+        <rect x="18" y="17" width="10" height="8" rx="2" fill="#00d4ff" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2s" repeatCount="indefinite"/></rect>
+        <rect x="32" y="17" width="10" height="8" rx="2" fill="#7c3aed" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.5s" repeatCount="indefinite"/></rect>
+        <rect x="10" y="36" width="40" height="28" rx="4" fill="#060d1f" stroke="#00d4ff" stroke-width="1"/>
+        <rect x="2" y="38" width="8" height="18" rx="4" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <rect x="50" y="38" width="8" height="18" rx="4" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <rect x="16" y="64" width="10" height="6" rx="3" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <rect x="34" y="64" width="10" height="6" rx="3" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <line x1="16" y1="48" x2="36" y2="48" stroke="#10b981" stroke-width="1" opacity="0.6"><animate attributeName="x2" values="16;36;16" dur="1.5s" repeatCount="indefinite"/></line>
+        <line x1="16" y1="54" x2="28" y2="54" stroke="#f59e0b" stroke-width="1" opacity="0.5"><animate attributeName="x2" values="16;28;16" dur="2s" repeatCount="indefinite"/></line>
+      </svg>
+      <!-- Small robot 2 -->
+      <svg width="60" height="70" viewBox="0 0 60 70" style="filter:drop-shadow(0 0 8px #7c3aed);animation:robot-hover 3s ease-in-out 1s infinite;">
+        <line x1="30" y1="4" x2="30" y2="12" stroke="#7c3aed" stroke-width="1.5"/>
+        <circle cx="30" cy="3" r="3" fill="#7c3aed"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle>
+        <rect x="14" y="12" width="32" height="24" rx="4" fill="#060d1f" stroke="#7c3aed" stroke-width="1"/>
+        <rect x="18" y="17" width="10" height="8" rx="2" fill="#7c3aed" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.8s" repeatCount="indefinite"/></rect>
+        <rect x="32" y="17" width="10" height="8" rx="2" fill="#00d4ff" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.2s" repeatCount="indefinite"/></rect>
+        <rect x="10" y="36" width="40" height="28" rx="4" fill="#060d1f" stroke="#7c3aed" stroke-width="1"/>
+        <rect x="2" y="38" width="8" height="18" rx="4" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <rect x="50" y="38" width="8" height="18" rx="4" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <rect x="16" y="64" width="10" height="6" rx="3" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <rect x="34" y="64" width="10" height="6" rx="3" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <line x1="16" y1="48" x2="40" y2="48" stroke="#7c3aed" stroke-width="1" opacity="0.6"><animate attributeName="x2" values="16;40;16" dur="1.8s" repeatCount="indefinite"/></line>
+        <line x1="16" y1="54" x2="32" y2="54" stroke="#00d4ff" stroke-width="1" opacity="0.5"><animate attributeName="x2" values="16;32;16" dur="2.3s" repeatCount="indefinite"/></line>
+      </svg>
+      <!-- Small robot 3 -->
+      <svg width="60" height="70" viewBox="0 0 60 70" style="filter:drop-shadow(0 0 8px #10b981);animation:robot-hover 3s ease-in-out 2s infinite;">
+        <line x1="30" y1="4" x2="30" y2="12" stroke="#10b981" stroke-width="1.5"/>
+        <circle cx="30" cy="3" r="3" fill="#10b981"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite"/></circle>
+        <rect x="14" y="12" width="32" height="24" rx="4" fill="#060d1f" stroke="#10b981" stroke-width="1"/>
+        <rect x="18" y="17" width="10" height="8" rx="2" fill="#10b981" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.5s" repeatCount="indefinite"/></rect>
+        <rect x="32" y="17" width="10" height="8" rx="2" fill="#f59e0b" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2s" repeatCount="indefinite"/></rect>
+        <rect x="10" y="36" width="40" height="28" rx="4" fill="#060d1f" stroke="#10b981" stroke-width="1"/>
+        <rect x="2" y="38" width="8" height="18" rx="4" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <rect x="50" y="38" width="8" height="18" rx="4" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <rect x="16" y="64" width="10" height="6" rx="3" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <rect x="34" y="64" width="10" height="6" rx="3" fill="#060d1f" stroke="#0f2a4a" stroke-width="1"/>
+        <line x1="16" y1="48" x2="38" y2="48" stroke="#10b981" stroke-width="1" opacity="0.6"><animate attributeName="x2" values="16;38;16" dur="2.1s" repeatCount="indefinite"/></line>
+        <line x1="16" y1="54" x2="30" y2="54" stroke="#f59e0b" stroke-width="1" opacity="0.5"><animate attributeName="x2" values="16;30;16" dur="1.7s" repeatCount="indefinite"/></line>
+      </svg>
+    </div>
+
+    <div class="footer-title">■ Thank You!</div>
+    <div class="footer-sub" style="margin-top:8px;">House Price Prediction · Elastic Net + MLflow · Machine Learning Course</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent1);margin-top:12px;letter-spacing:2px;">Abdullah Waleed · Mohamed Atef · Saif Sameh</div>
+  </div>
+</div>
+
+<script>
+// ─── ANIMATED BACKGROUND CANVAS ───
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Particles
+const particles = [];
+for (let i = 0; i < 80; i++) {
+  particles.push({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: (Math.random() - 0.5) * 0.4,
+    r: Math.random() * 2 + 0.5,
+    color: Math.random() > 0.6 ? '#00d4ff' : Math.random() > 0.5 ? '#7c3aed' : '#10b981',
+    alpha: Math.random() * 0.5 + 0.1
+  });
+}
+
+// Binary/data nodes
+const nodes = [];
+for (let i = 0; i < 12; i++) {
+  nodes.push({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    vx: (Math.random() - 0.5) * 0.2,
+    vy: (Math.random() - 0.5) * 0.2,
+    size: Math.random() * 3 + 2,
+    pulse: Math.random() * Math.PI * 2
+  });
+}
+
+function drawHexagon(x, y, r, color) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * Math.PI) / 3 - Math.PI / 6;
+    const px = x + r * Math.cos(angle);
+    const py = y + r * Math.sin(angle);
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+}
+
+function drawCircuit(x, y) {
+  ctx.strokeStyle = 'rgba(0,212,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  const dirs = [0, Math.PI/2, Math.PI, Math.PI*3/2];
+  const dir = dirs[Math.floor(Math.random() * 4)];
+  const len = 30 + Math.random() * 60;
+  ctx.lineTo(x + Math.cos(dir)*len, y + Math.sin(dir)*len);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x + Math.cos(dir)*len, y + Math.sin(dir)*len, 2, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,212,255,0.1)';
+  ctx.fill();
+}
+
+// Static circuit lines
+const circuits = [];
+for (let i = 0; i < 30; i++) {
+  circuits.push({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight });
+}
+
+// Background hexagons
+const hexes = [];
+for (let i = 0; i < 20; i++) {
+  hexes.push({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: 20 + Math.random() * 60,
+    color: Math.random() > 0.5 ? 'rgba(0,212,255,0.04)' : 'rgba(124,58,237,0.04)',
+    speed: (Math.random() - 0.5) * 0.1,
+    vy: (Math.random() - 0.5) * 0.1
+  });
+}
+
+let t = 0;
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  t += 0.01;
+
+  // Draw hexes
+  hexes.forEach(h => {
+    h.x += h.speed;
+    h.y += h.vy;
+    if (h.x > canvas.width + 80) h.x = -80;
+    if (h.x < -80) h.x = canvas.width + 80;
+    if (h.y > canvas.height + 80) h.y = -80;
+    if (h.y < -80) h.y = canvas.height + 80;
+    drawHexagon(h.x, h.y, h.r + Math.sin(t) * 3, h.color);
+  });
+
+  // Draw circuit lines
+  circuits.forEach(c => drawCircuit(c.x, c.y));
+
+  // Draw particle connections
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 120) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(0,212,255,${(1-dist/120)*0.05})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Draw particles
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.alpha;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // Draw nodes
+  nodes.forEach(n => {
+    n.x += n.vx;
+    n.y += n.vy;
+    n.pulse += 0.05;
+    if (n.x < 0) n.x = canvas.width;
+    if (n.x > canvas.width) n.x = 0;
+    if (n.y < 0) n.y = canvas.height;
+    if (n.y > canvas.height) n.y = 0;
+
+    const pulse = 0.5 + 0.5 * Math.sin(n.pulse);
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.size * (1 + pulse * 0.5), 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(0,212,255,${0.2 * pulse})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.size * 0.5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,212,255,${0.4 * pulse})`;
+    ctx.fill();
+  });
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ─── CARD MOUSE GLOW ───
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+  });
+});
+
+// ─── SCROLL ANIMATIONS ───
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.section').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(30px)';
+  el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
